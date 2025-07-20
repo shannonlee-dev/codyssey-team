@@ -7,6 +7,8 @@ Stage 2: 지도 시각화
 """
 
 import pandas as pd
+import matplotlib
+matplotlib.use('Agg')  # 반드시 plt, patches 등 import 전에 실행
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import os
@@ -48,38 +50,35 @@ def setup_map_figure(complete_df):
     # 좌표 범위 계산
     x_min, x_max = complete_df['x'].min(), complete_df['x'].max()
     y_min, y_max = complete_df['y'].min(), complete_df['y'].max()
-    
+
     print(f'좌표 범위: X({x_min}~{x_max}), Y({y_min}~{y_max})')
-    
+
     # figure 크기 설정 (좌표 비율에 맞춤)
     fig_width = max(10, (x_max - x_min + 1) * 0.8)
     fig_height = max(8, (y_max - y_min + 1) * 0.8)
-    
+
     fig, ax = plt.subplots(figsize=(fig_width, fig_height))
-    
+
     # 좌표계 설정: 왼쪽 상단이 (1,1), 오른쪽 하단이 최대 좌표
     # matplotlib에서 y축을 뒤집어야 함 (기본적으로 아래가 원점)
-    ax.set_xlim(x_min - 0.5, x_max + 0.5)
-    ax.set_ylim(y_max + 0.5, y_min - 0.5)  # y축 뒤집기
-    
-    # 격자선 그리기
+    ax.set_xlim(x_min, x_max)
+    ax.set_ylim(y_max, y_min)
+
+    # 격자선 그리기 (건물이 격자선 위에 위치하도록)
     for x in range(x_min, x_max + 1):
-        ax.axvline(x=x + 0.5, color='lightgray', linestyle='-', alpha=0.7)
-        ax.axvline(x=x - 0.5, color='lightgray', linestyle='-', alpha=0.7)
-    
+        ax.axvline(x=x, color='lightgray', linestyle='-', alpha=0.7)
     for y in range(y_min, y_max + 1):
-        ax.axhline(y=y + 0.5, color='lightgray', linestyle='-', alpha=0.7)
-        ax.axhline(y=y - 0.5, color='lightgray', linestyle='-', alpha=0.7)
-    
-    # 축 설정
+        ax.axhline(y=y, color='lightgray', linestyle='-', alpha=0.7)
+
+    # 축 설정 (번호가 격자선 위에 오도록)
     ax.set_xlabel('X Coordinate', fontsize=12)
     ax.set_ylabel('Y Coordinate', fontsize=12)
     ax.set_title('Regional Map Visualization', fontsize=16, fontweight='bold')
-    
-    # 격자 눈금 설정
+
+    # 격자 눈금 설정 (번호가 격자선 위에 오도록)
     ax.set_xticks(range(x_min, x_max + 1))
     ax.set_yticks(range(y_min, y_max + 1))
-    
+
     return fig, ax, (x_min, x_max, y_min, y_max)
 
 
@@ -97,46 +96,46 @@ def draw_structures(ax, complete_df):
         x, y = row['x'], row['y']
         struct_type = row['struct']
         is_construction = row['ConstructionSite'] == 1
-        
-        # 공사장이 다른 구조물과 겹치는 경우 공사장으로 우선 처리
+
+        # 건물이 격자선 위에 위치하도록 중심 좌표를 정수로 사용
         if is_construction:
             # 회색 사각형으로 공사장 표시
-            square = patches.Rectangle((x-0.4, y-0.4), 0.8, 0.8, 
-                                     facecolor='gray', edgecolor='darkgray', 
+            square = patches.Rectangle((x - 0.5, y - 0.5), 1.0, 1.0,
+                                     facecolor='gray', edgecolor='darkgray',
                                      alpha=0.8, linewidth=1)
             ax.add_patch(square)
             structure_counts['ConstructionSite'] += 1
-            
+
         else:
             # 구조물 타입에 따른 시각화
             if struct_type == 'Apartment':
                 # 갈색 원으로 아파트 표시
-                circle = patches.Circle((x, y), 0.3, facecolor='brown', 
-                                      edgecolor='darkred', alpha=0.8, linewidth=1)
+                circle = patches.Circle((x, y), 0.4, facecolor='brown',
+                                      edgecolor='darkred', alpha=1.0, linewidth=1)
                 ax.add_patch(circle)
                 structure_counts['Apartment'] += 1
-                
+
             elif struct_type == 'Building':
-                # 갈색 원으로 빌딩 표시 
-                circle = patches.Circle((x, y), 0.3, facecolor='brown', 
-                                      edgecolor='darkred', alpha=0.8, linewidth=1)
+                # 갈색 원으로 빌딩 표시
+                circle = patches.Circle((x, y), 0.4, facecolor='brown',
+                                      edgecolor='darkred', alpha=1.0, linewidth=1)
                 ax.add_patch(circle)
                 structure_counts['Building'] += 1
-                    
+
             elif struct_type == 'BandalgomCoffee':
                 # 초록색 사각형으로 반달곰커피 표시
-                square = patches.Rectangle((x-0.3, y-0.3), 0.6, 0.6, 
-                                         facecolor='green', edgecolor='darkgreen', 
+                square = patches.Rectangle((x - 0.4, y - 0.4), 0.8, 0.8,
+                                         facecolor='green', edgecolor='darkgreen',
                                          alpha=0.9, linewidth=2)
                 ax.add_patch(square)
                 structure_counts['BandalgomCoffee'] += 1
-                
+
             elif struct_type == 'MyHome':
                 # 초록색 삼각형으로 내 집 표시 (Polygon 사용)
-                triangle_points = [(x, y-0.3), (x-0.3, y+0.2), (x+0.3, y+0.2)]
+                triangle_points = [(x, y - 0.35), (x - 0.35, y + 0.3), (x + 0.35, y + 0.3)]
                 triangle = patches.Polygon(triangle_points,
-                                         facecolor='limegreen', 
-                                         edgecolor='darkgreen', 
+                                         facecolor='limegreen',
+                                         edgecolor='darkgreen',
                                          alpha=0.9, linewidth=2)
                 ax.add_patch(triangle)
                 structure_counts['MyHome'] += 1
