@@ -103,7 +103,6 @@ def bfs_shortest_path(start_pos, target_positions, valid_positions, construction
         visited = {start_pos}
         directions = [(0, -1), (0, 1), (-1, 0), (1, 0)]
 
-        found = False
         while queue:
             current_pos, path = queue.popleft()
             if current_pos == target:
@@ -111,7 +110,6 @@ def bfs_shortest_path(start_pos, target_positions, valid_positions, construction
                     min_length = len(path)
                     min_path = path
                     min_target = target
-                found = True
                 break
             x, y = current_pos
             for dx, dy in directions:
