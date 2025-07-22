@@ -190,7 +190,7 @@ def convert_struct_ids_to_names(area_struct_df, area_category_df):
         return area_struct_df
         
     except Exception as e:
-        print(f'❌ 구조물 ID를 이름으로 변환하는 중 오류 발생: {e}')
+        print(f'구조물 ID를 이름으로 변환하는 중 오류 발생: {e}')
         raise
 
 
@@ -274,9 +274,16 @@ def analyze_data():
         print('데이터셋 병합 시도...')
         complete_df = merge_all_datasets(area_map_df, area_struct_with_names)
         
+        output_filename = 'data/complete_map_data.csv' # 저장할 파일 경로 및 이름
+        complete_df.to_csv(output_filename, index=False, encoding='utf-8-sig')
+        print(f'통합 지도 데이터가 "{output_filename}"에 저장되었습니다.')
+
+
         # 전체 데이터 개요 표시
         print('\n전체 데이터: area 기준 정렬')
         print(complete_df)
+
+
 
         area_1_result = filter_area_1_data(complete_df)
         
@@ -326,6 +333,11 @@ if __name__ == '__main__':
             print('\n=== 분석 완료 (데이터 없음) ===')
             print('area 1 데이터가 존재하지 않습니다.')
 
+    except KeyboardInterrupt:
+        print('\n\n사용자에 의해 중단되었습니다.')
+        sys.exit(1)
+    
     except Exception as e:
         print(f'\n프로그램 실행 중 오류 발생: {e}')
         sys.exit(1)
+    
